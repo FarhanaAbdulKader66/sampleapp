@@ -129,7 +129,7 @@ pipeline
                               """{
                                 "files": [
                                   {
-                                    "pattern": "Farhana-Dotnet-App/*.zip",
+                                    "pattern": "Farhana-Dotnet-App/WebApp_${BUILD_NUMBER}.zip",
                                     "target": "G:/jfrog/"          
                                   }
                                ]
