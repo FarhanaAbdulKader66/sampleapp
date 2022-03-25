@@ -41,12 +41,12 @@ pipeline
                 waitForQualityGate abortPipeline: true
             }
         }*/
-        stage("Quality gate") 
+        /*stage("Quality gate") 
         {
             steps {
                 waitForQualityGate abortPipeline: false, credentialsId: 'SonarQube'
             }
-        }
+        }*/
         stage('Pipeline Build')
         {
             steps
