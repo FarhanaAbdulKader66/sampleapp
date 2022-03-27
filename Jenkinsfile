@@ -136,15 +136,7 @@ pipeline
                               }""" )
               }
         }
-      /*  stage('Extract ZIP') 
-	      {
-	          steps
-	          {
-		              powershell '''
-		                      Expand-Archive 'G:/jfrog/dotnetapp.zip' -DestinationPath 'G:/demo/'
-		                  '''
-            } 
-	      }*/
+      
     
 	      stage('Deploying to webapp in azure') 
 	      {
