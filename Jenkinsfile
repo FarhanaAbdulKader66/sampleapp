@@ -14,7 +14,7 @@ pipeline
     agent any	
 	stages 
 	{
-        stage('Sonarqube Static Code') 		//sonarqube static code analyses stage
+        stage('Sonarqube Static Code') 		//Sonarqube static code analyses stage
         {
             steps
             {
