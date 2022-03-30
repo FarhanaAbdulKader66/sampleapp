@@ -1,69 +1,60 @@
 def sourcepath = "C:/ProgramData/jenkins/.jenkins/workspace/scmWebApp/aspnet-core-dotnet-core/aspnet-core-dotnet-core.csproj"
+def publishpath = "aspnet-core-dotnet-core/bin/Debug/netcoreapp1.1/publish"
+def artifactdestinationpath = "G:/jfrog/"
 
 
 pipeline 
 {
-    environment
+   /* environment
     {
         appName = "Farhana-WebApp"
         resourceGroup = "Training-rg"
        
-    }
+    }*/
     agent any	
 	stages 
 	{
-        stage('Sonarqube Static Code') 
+        stage('Sonarqube Static Code') 		//sonarqube static code analyses stage
         {
             steps
             {
                 script
                 {
                     
-                    def scannerHome = tool 'SonarScanner for MSBuild'
-                    withSonarQubeEnv('SonarQubeServer') 
+                    def scannerHome = tool 'SonarScanner for MSBuild'		//variable defined to store the installed tool
+                    withSonarQubeEnv('SonarQubeServer') 			// this block is used to select the sonarqube server
                     {
-                        bat "\"${scannerHome}\\SonarScanner.MSBuild.exe\" begin /k:\"WebApp\""
-                        bat "dotnet build ${sourcepath}"    
+                        bat "\"${scannerHome}\\SonarScanner.MSBuild.exe\" begin /k:\"WebApp\"" 
+                        bat "dotnet build ${sourcepath}"    					
                         bat "\"${scannerHome}\\SonarScanner.MSBuild.exe\" end"
                     }
                 }
             }
         }
-	/*stage('SonarQube analysis') {
-            steps {
-                	withSonarQubeEnv('SonarQube') {
-                    sh "./gradlew sonarqube"
-                	}
-           	  }
-        }
-        stage("Quality gate") {
-            steps {
-                waitForQualityGate abortPipeline: true
-            }
-        }*/
-        stage("Quality gate") 
+	
+        stage("Quality gate") 		//stage used to check quality gate status
         {
             steps {
                 waitForQualityGate abortPipeline: false
             }
         }
-        stage('Pipeline Build')
+        stage('Pipeline Build')		// stage used to build the project and all its dependencies.
         {
             steps
             {
-                bat "dotnet build ${sourcepath}"
+                bat "dotnet build ${sourcepath}"	//dotnet build command uses msbuild to build the project so that both parallel and incremental build is supported
 		    
             }
         }
-        stage('Testing')
+        stage('Testing')		//  stage used to execute unit tests in a given solution. 
         {
             steps
             {
-                bat "dotnet test ${sourcepath}"
+                bat "dotnet test ${sourcepath}"		
 		   
             }
         }
-        stage('Publishing')
+        stage('Publishing')		//this stage publishes the application and its dependencies to a folder for deployment to a hosting system.
         {
             steps
             {
@@ -72,17 +63,17 @@ pipeline
             }
         }
         
-        stage('Packaging Stage') 
+        stage('Packaging Stage')  	//stage used to package published files.
         {
             steps 
             {
                 echo "Deploying to stage environment for more tests!";
                 bat "del *.zip"
-                bat "tar.exe -a -c -f WebApp_${BUILD_NUMBER}.zip aspnet-core-dotnet-core/bin/Debug/netcoreapp1.1/publish"
+		    bat "tar.exe -a -c -f WebApp_${BUILD_NUMBER}.zip ${publishpath}"
              }
         }
         
-        stage ('Connecting to JFrog artifactory')
+        stage ('Connecting to JFrog artifactory')  	//connecting jenkins to jfrog
         {
             steps
             {
@@ -94,12 +85,12 @@ pipeline
                         )
             }
         }
-        stage('Uploading to JFrog')
+        stage('Uploading to JFrog')		//This allows managing the File Specifications
         {
             steps
             {
                 rtUpload (
-                 serverId:"Artifactory" ,
+                 serverId:"Artifactory" ,	//Creating an Artifactory Server Instance
                   spec: '''{
                    "files": [
                       {
@@ -108,10 +99,10 @@ pipeline
                       }
                             ]
                            }''',
-                        )
+                        )		//Farhana-Dotnet-App is the repository created in jfrog
             }
         }
-        stage ('Publish Build Info') 
+        stage ('Publish Build Info') 	//The depedencies and artifacts which are recorded locally is published as build-info to Artifactory using this stage.
         {
             steps 
             {
@@ -119,7 +110,7 @@ pipeline
             }
         }
         
-        stage ('Downloading artifacts')
+        stage ('Downloading artifacts')		//this stage allows to download the specified files from the artifactory to a destination path.
         {
             steps
             {
@@ -130,7 +121,7 @@ pipeline
                                 "files": [
                                   {
                                     "pattern": "Farhana-Dotnet-App/WebApp_${BUILD_NUMBER}.zip",
-                                    "target": "G:/jfrog/"          
+                                    "target": "${artifactdestinationpath}"          
                                   }
                                ]
                               }""" )
@@ -138,12 +129,14 @@ pipeline
         }
       
     
-	      stage('Deploying to webapp in azure') 
+	      stage('Deploying to webapp in azure') 	//stage used to deploy the published files to azure web app
 	      {
 	          steps
 		        {
 		   
-			          azureWebAppPublish appName: "${env.appName}", azureCredentialsId: 'AzureID', resourceGroup: "${env.resourceGroup}"
+			          //azureWebAppPublish appName: "${env.appName}", azureCredentialsId: 'AzureID', resourceGroup: "${env.resourceGroup}"
+				azureWebAppPublish azureCredentialsId: params.Credential_ID , resourceGroup: params.Resource_Group , appName: params.webappName
+				
 	           }
        	}
 	}
