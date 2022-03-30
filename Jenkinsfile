@@ -22,7 +22,7 @@ pipeline
                 {
                     
                     def scannerHome = tool 'SonarScanner for MSBuild'		//variable defined to store the installed tool
-                    withSonarQubeEnv('SonarQubeServer') 			// this block is used to select the sonarqube server
+                    withSonarQubeEnv('SonarQubeServer') 			// This block is used to select the sonarqube server
                     {
                         bat "\"${scannerHome}\\SonarScanner.MSBuild.exe\" begin /k:\"WebApp\"" 
                         bat "dotnet build ${sourcepath}"    					
